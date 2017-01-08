@@ -1,0 +1,298 @@
+
+# Unit 6 - Introduction to Clustering
+
+
+# After following the steps in the video, load the data into R.here to load our data we will be using slightly different command since our dataset is not in CSV format instead it is in text format where entries are seperated by vertical bar.here we have put header=FALSE because our data doesnot have header or a variable name row.
+ 
+movies = read.table("movieLens.txt", header=FALSE, sep="|",quote="\"")
+
+str(movies)
+
+'data.frame':   1682 obs. of  24 variables:
+ $ V1 : int  1 2 3 4 5 6 7 8 9 10 ...
+ $ V2 : Factor w/ 1664 levels "'Til There Was You (1997)",..: 1525 618 555 594 344 1318 1545 111 391 1240 ...
+ $ V3 : Factor w/ 241 levels "","01-Aug-1997",..: 71 71 71 71 71 71 71 71 71 182 ...
+ $ V4 : logi  NA NA NA NA NA NA ...
+ $ V5 : Factor w/ 1661 levels "","http://us.imdb.com/M/title-exact/Independence%20(1997)",..: 1431 565 505 543 310 1661 1453 103 357 1183 ...
+ $ V6 : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ V7 : int  0 1 0 1 0 0 0 0 0 0 ...
+ $ V8 : int  0 1 0 0 0 0 0 0 0 0 ...
+ $ V9 : int  1 0 0 0 0 0 0 0 0 0 ...
+ $ V10: int  1 0 0 0 0 0 0 1 0 0 ...
+ $ V11: int  1 0 0 1 0 0 0 1 0 0 ...
+ $ V12: int  0 0 0 0 1 0 0 0 0 0 ...
+ $ V13: int  0 0 0 0 0 0 0 0 0 0 ...
+ $ V14: int  0 0 0 1 1 1 1 1 1 1 ...
+ $ V15: int  0 0 0 0 0 0 0 0 0 0 ...
+ $ V16: int  0 0 0 0 0 0 0 0 0 0 ...
+ $ V17: int  0 0 0 0 0 0 0 0 0 0 ...
+ $ V18: int  0 0 0 0 0 0 0 0 0 0 ...
+ $ V19: int  0 0 0 0 0 0 0 0 0 0 ...
+ $ V20: int  0 0 0 0 0 0 0 0 0 0 ...
+ $ V21: int  0 0 0 0 0 0 1 0 0 0 ...
+ $ V22: int  0 1 1 0 1 0 0 0 0 0 ...
+ $ V23: int  0 0 0 0 0 0 0 0 0 1 ...
+ $ V24: int  0 0 0 0 0 0 0 0 0 0 ...
+
+
+# Add column names
+
+colnames(movies) = c("ID", "Title", "ReleaseDate", "VideoReleaseDate", "IMDB", "Unknown", "Action", "Adventure", "Animation", "Childrens", "Comedy", "Crime", "Documentary", "Drama", "Fantasy", "FilmNoir", "Horror", "Musical", "Mystery", "Romance", "SciFi", "Thriller", "War", "Western")
+
+str(movies)
+
+'data.frame':   1682 obs. of  24 variables:
+ $ ID              : int  1 2 3 4 5 6 7 8 9 10 ...
+ $ Title           : Factor w/ 1664 levels "'Til There Was You (1997)",..: 1525 618 555 594 344 1318 1545 111 391 1240 ...
+ $ ReleaseDate     : Factor w/ 241 levels "","01-Aug-1997",..: 71 71 71 71 71 71 71 71 71 182 ...
+ $ VideoReleaseDate: logi  NA NA NA NA NA NA ...
+ $ IMDB            : Factor w/ 1661 levels "","http://us.imdb.com/M/title-exact/Independence%20(1997)",..: 1431 565 505 543 310 1661 1453 103 357 1183 ...
+ $ Unknown         : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ Action          : int  0 1 0 1 0 0 0 0 0 0 ...
+ $ Adventure       : int  0 1 0 0 0 0 0 0 0 0 ...
+ $ Animation       : int  1 0 0 0 0 0 0 0 0 0 ...
+ $ Childrens       : int  1 0 0 0 0 0 0 1 0 0 ...
+ $ Comedy          : int  1 0 0 1 0 0 0 1 0 0 ...
+ $ Crime           : int  0 0 0 0 1 0 0 0 0 0 ...
+ $ Documentary     : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ Drama           : int  0 0 0 1 1 1 1 1 1 1 ...
+ $ Fantasy         : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ FilmNoir        : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ Horror          : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ Musical         : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ Mystery         : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ Romance         : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ SciFi           : int  0 0 0 0 0 0 1 0 0 0 ...
+ $ Thriller        : int  0 1 1 0 1 0 0 0 0 0 ...
+ $ War             : int  0 0 0 0 0 0 0 0 0 1 ...
+ $ Western         : int  0 0 0 0 0 0 0 0 0 0 ...
+
+# Remove unnecessary variables like ID,release date,video release date and IMDB variable since we wont be using these variables.
+
+movies$ID = NULL
+movies$ReleaseDate = NULL
+movies$VideoReleaseDate = NULL
+movies$IMDB = NULL
+
+# Remove duplicates (since there are a few duplicate entries in our dataset)
+movies = unique(movies)
+
+# Take a look at our data again:
+
+> str(movies)
+'data.frame':   1664 obs. of  20 variables:
+ $ Title      : Factor w/ 1664 levels "'Til There Was You (1997)",..: 1525 618 555 594 344 1318 1545 111 391 1240 ...
+ $ Unknown    : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ Action     : int  0 1 0 1 0 0 0 0 0 0 ...
+ $ Adventure  : int  0 1 0 0 0 0 0 0 0 0 ...
+ $ Animation  : int  1 0 0 0 0 0 0 0 0 0 ...
+ $ Childrens  : int  1 0 0 0 0 0 0 1 0 0 ...
+ $ Comedy     : int  1 0 0 1 0 0 0 1 0 0 ...
+ $ Crime      : int  0 0 0 0 1 0 0 0 0 0 ...
+ $ Documentary: int  0 0 0 0 0 0 0 0 0 0 ...
+ $ Drama      : int  0 0 0 1 1 1 1 1 1 1 ...
+ $ Fantasy    : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ FilmNoir   : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ Horror     : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ Musical    : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ Mystery    : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ Romance    : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ SciFi      : int  0 0 0 0 0 0 1 0 0 0 ...
+ $ Thriller   : int  0 1 1 0 1 0 0 0 0 0 ...
+ $ War        : int  0 0 0 0 0 0 0 0 0 1 ...
+ $ Western    : int  0 0 0 0 0 0 0 0 0 0 ...
+
+here we have 1664 observations, a few less than before.
+
+
+# Video 7
+===========
+
+Here we will use hirarchial clustering to cluster the movies in the MovieLens data set by genre.There are two steps of hierarchical clustering.
+1)we have to compute the distace between all data points and then we need to cluster the points.
+
+# Compute distances  ---we only want to cluster our movies on genre variable,not on title variable,so will cluster on columns 2 to columns 20
+
+distances = dist(movies[2:20], method = "euclidean")
+
+# Hierarchical clustering ---lets cluster our movies using "hclust"function for Hierarchical clustering
+
+clusterMovies = hclust(distances, method = "ward.D") 
+
+# Plot the dendrogram
+plot(clusterMovies)
+
+# Assign points to clusters --we can label each of the data points according to what cluster it belongs to.
+
+clusterGroups = cutree(clusterMovies, k = 10)
+
+#Now let's figure out what the clusters are like.
+
+# Let's use the tapply function to compute the percentage of movies in each genre and cluster
+
+tapply(movies$Action, clusterGroups, mean) ===So we can see here that in cluster 2, about 78% of the movies have the action genre label, whereas in cluster 4 none of the movies are labeled as action movies.
+        1         2         3         4         5         6         7 
+0.1784512 0.7839196 0.1238532 0.0000000 0.0000000 0.1015625 0.0000000 
+        8         9        10 
+0.0000000 0.0000000 0.0000000 
+
+tapply(movies$Romance, clusterGroups, mean)===let's look at the romance genre.Here we can see that all of the movies in clusters six and seven are labeled as romance movies, whereas only 4% of the movies in cluster two are labeled as romance movies.
+
+         1          2          3          4          5          6          7 
+0.10437710 0.04522613 0.03669725 0.00000000 0.00000000 1.00000000 1.00000000 
+         8          9         10 
+0.00000000 0.00000000 0.00000000 
+
+# We can repeat this for each genre. If you do, you get the results in ClusterMeans.ods
+
+
+# Find which cluster Men in Black is in.
+
+subset(movies, Title=="Men in Black (1997)")
+clusterGroups[257]
+
+# Create a new data set with just the movies from cluster 2
+cluster2 = subset(movies, clusterGroups==2)
+
+# Look at the first 10 titles in this cluster:
+cluster2$Title[1:10]
+==========================================================================================================================================================================
+
+# Unit 6 - Recitation
+
+# Video 2 ===(In this video we will try to segment a flower image using hierarchical clustering.)
+
+flower = read.csv("flower.csv", header=FALSE)
+str(flower)
+
+# Change the data type to matrix
+flowerMatrix = as.matrix(flower)
+str(flowerMatrix)
+
+# Turn matrix into a vector
+flowerVector = as.vector(flowerMatrix)
+str(flowerVector)
+
+flowerVector2 = as.vector(flower)  
+
+str(flowerVector2)  ==== the result will be same like the dataframe means like str(flower),so before convering data frame to vector we first need to convert dataframe to matrix and then to vector
+
+# Compute distances
+distance = dist(flowerVector, method = "euclidean")
+
+# Hierarchical clustering
+clusterIntensity = hclust(distance, method="ward")
+
+# Plot the dendrogram
+plot(clusterIntensity)
+
+# Select 3 clusters,by plotting rectangles around the clusters on this tree.
+rect.hclust(clusterIntensity, k = 3, border = "red")
+
+# Split data ino these three clusters
+flowerClusters = cutree(clusterIntensity, k = 3)
+flowerClusters
+
+# Find mean intensity values.we can use the tapply function and ask R to group
+the values in the flower vector according to the flower
+clusters, and then apply the mean statistic
+to each of the groups.
+
+tapply(flowerVector, flowerClusters, mean)
+
+# To output an image, we can use the image function
+in R, which takes a matrix as an input.
+But the variable flowerClusters, as we just saw, is a vector.
+So we need to convert it into a matrix.
+We can do this by setting the dimension of this variable
+by using the dimension function.
+
+# Plot the image and the clusters
+dim(flowerClusters) = c(50,50)
+image(flowerClusters, axes = FALSE)
+
+# Original image
+image(flowerMatrix,axes=FALSE,col=grey(seq(0,1,length=256)))
+
+==========================================================================================================================================================================
+
+# Video 4=====(In this video we will try to segment an MRI brain image of a healthy patient using hierarchical clustering.)
+
+# Let's try this with an MRI image of the brain
+
+healthy = read.csv("healthy.csv", header=FALSE)
+healthyMatrix = as.matrix(healthy)
+str(healthyMatrix)
+
+# Plot original image
+image(healthyMatrix,axes=FALSE,col=grey(seq(0,1,length=256)))
+
+# Turn matrix into a vector
+healthyVector = as.vector(healthyMatrix)
+
+# Compute distances
+distance = dist(healthyVector, method = "euclidean")
+
+Error: cannot allocate vector of size 498.0 Gb
+
+# We have an error - why?
+str(healthyVector)
+
+num [1:365636] 0.00427 0.00855 0.01282 0.01282 0.01282 ...
+> n = 365636
+> n * (n-1)/2
+[1] 66844659430
+See how big this number is. Of course R would complain.It's 67 billion values that we're asking R to store in a matrix.The bad news now is that we cannot use hierarchical clustering.so, in this case we will use k means clustering.
+
+# Specify number of clusters.So setting the number of clusters depends on exactly what you're trying to extract from the image.For the sake of our example, let's set the number of clusters here, k= 5.
+
+# Run k-means
+k=5
+set.seed(1)
+KMC = kmeans(healthyVector, centers = k, iter.max = 1000)
+str(KMC)
+
+table(KMC$cluster)  or  KMC$size ===to check for the no. of observations in each clusters.
+
+# Extract clusters
+healthyClusters = KMC$cluster
+> KMC$centers[2]
+[1] 0.1061945
+> KMC$centers[1]
+[1] 0.4817719
+> KMC$centers[3]
+[1] 0.01961886
+> KMC$centers[4]
+[1] 0.3094283
+> KMC$centers[5]
+[1] 0.1842058
+
+# Plot the image with the clusters
+dim(healthyClusters) = c(nrow(healthyMatrix), ncol(healthyMatrix))
+
+image(healthyClusters, axes = FALSE, col=rainbow(k))
+
+# Apply to a test image(We can use these clusters to automatically detect
+tumors in MRI images of sick patients)
+ 
+tumor = read.csv("tumor.csv", header=FALSE)
+tumorMatrix = as.matrix(tumor)
+tumorVector = as.vector(tumorMatrix)
+
+# Now, we will not run the k-means algorithm again on the tumor vector.Instead, we will apply the k-means clustering results (that we found using the healthy brain image) on the tumor vector.In other words, we treat the healthy vector as training set and the tumor vector as a testing set.To do this, we first need to install
+a new package that is called flexclust.
+
+# Apply clusters from before to new image, using the flexclust package
+install.packages("flexclust")
+library(flexclust)
+
+KMC.kcca = as.kcca(KMC, healthyVector)
+tumorClusters = predict(KMC.kcca, newdata = tumorVector)
+
+# Visualize the clusters
+dim(tumorClusters) = c(nrow(tumorMatrix), ncol(tumorMatrix))
+
+image(tumorClusters, axes = FALSE, col=rainbow(k))
+
+
+
