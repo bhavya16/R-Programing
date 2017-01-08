@@ -1,0 +1,402 @@
+LOGISTIC REGRESSION MODEL=================================
+
+> titanic <- read.csv("train.csv")
+> str(titanic)
+'data.frame':	891 obs. of  12 variables:
+ $ PassengerId: int  1 2 3 4 5 6 7 8 9 10 ...
+ $ Survived   : int  0 1 1 1 0 0 0 0 1 1 ...
+ $ Pclass     : int  3 1 3 1 3 3 1 3 3 2 ...
+ $ Name       : Factor w/ 891 levels "Abbing, Mr. Anthony",..: 109 191 358 277 16 559 520 629 417 581 ...
+ $ Sex        : Factor w/ 2 levels "female","male": 2 1 1 1 2 2 2 2 1 1 ...
+ $ Age        : num  22 38 26 35 35 NA 54 2 27 14 ...
+ $ SibSp      : int  1 1 0 1 0 0 0 3 0 1 ...
+ $ Parch      : int  0 0 0 0 0 0 0 1 2 0 ...
+ $ Ticket     : Factor w/ 681 levels "110152","110413",..: 524 597 670 50 473 276 86 396 345 133 ...
+ $ Fare       : num  7.25 71.28 7.92 53.1 8.05 ...
+ $ Cabin      : Factor w/ 148 levels "","A10","A14",..: 1 83 1 57 1 1 131 1 1 1 ...
+ $ Embarked   : Factor w/ 4 levels "","C","Q","S": 4 2 4 4 4 3 4 4 4 2 ...
+> summary(titanic)
+  PassengerId       Survived          Pclass                                         Name    
+ Min.   :  1.0   Min.   :0.0000   Min.   :1.000   Abbing, Mr. Anthony                  :  1  
+ 1st Qu.:223.5   1st Qu.:0.0000   1st Qu.:2.000   Abbott, Mr. Rossmore Edward          :  1  
+ Median :446.0   Median :0.0000   Median :3.000   Abbott, Mrs. Stanton (Rosa Hunt)     :  1  
+ Mean   :446.0   Mean   :0.3838   Mean   :2.309   Abelson, Mr. Samuel                  :  1  
+ 3rd Qu.:668.5   3rd Qu.:1.0000   3rd Qu.:3.000   Abelson, Mrs. Samuel (Hannah Wizosky):  1  
+ Max.   :891.0   Max.   :1.0000   Max.   :3.000   Adahl, Mr. Mauritz Nils Martin       :  1  
+                                                  (Other)                              :885  
+     Sex           Age            SibSp           Parch             Ticket         Fare       
+ female:314   Min.   : 0.42   Min.   :0.000   Min.   :0.0000   1601    :  7   Min.   :  0.00  
+ male  :577   1st Qu.:20.12   1st Qu.:0.000   1st Qu.:0.0000   347082  :  7   1st Qu.:  7.91  
+              Median :28.00   Median :0.000   Median :0.0000   CA. 2343:  7   Median : 14.45  
+              Mean   :29.70   Mean   :0.523   Mean   :0.3816   3101295 :  6   Mean   : 32.20  
+              3rd Qu.:38.00   3rd Qu.:1.000   3rd Qu.:0.0000   347088  :  6   3rd Qu.: 31.00  
+              Max.   :80.00   Max.   :8.000   Max.   :6.0000   CA 2144 :  6   Max.   :512.33  
+              NA's   :177                                      (Other) :852                   
+         Cabin     Embarked
+            :687    :  2   
+ B96 B98    :  4   C:168   
+ C23 C25 C27:  4   Q: 77   
+ G6         :  4   S:644   
+ C22 C26    :  3           
+ D          :  3           
+ (Other)    :186           
+> titanic_new <- titanic
+>titanic_new$Title <-  ifelse(grepl("mr", tolower(titanic_new$Name)), 'Mr', 
++                              ifelse(grepl("miss", tolower(titanic_new$Name)), 'Miss', 
++                                     ifelse(grepl("mrs", tolower(titanic_new$Name)), 'Mrs', 
++                                            ifelse(grepl("master", tolower(titanic_new$Name)), 'Master','Unknown'))))
+
+>titanic_new$Famsize <- titanic_new$SibSp+titanic_new$Parch+1
+> titanic_new$Survived <- as.factor(titanic_new$Survived)
+> titanic_new$Pclass <- as.factor(titanic_new$Pclass)
+> str(titanic_new)
+'data.frame':	891 obs. of  14 variables:
+ $ PassengerId: int  1 2 3 4 5 6 7 8 9 10 ...
+ $ Survived   : Factor w/ 2 levels "0","1": 1 2 2 2 1 1 1 1 2 2 ...
+ $ Pclass     : Factor w/ 3 levels "1","2","3": 3 1 3 1 3 3 1 3 3 2 ...
+ $ Name       : Factor w/ 891 levels "Abbing, Mr. Anthony",..: 109 191 358 277 16 559 520 629 417 581 ...
+ $ Sex        : Factor w/ 2 levels "female","male": 2 1 1 1 2 2 2 2 1 1 ...
+ $ Age        : num  22 38 26 35 35 NA 54 2 27 14 ...
+ $ SibSp      : int  1 1 0 1 0 0 0 3 0 1 ...
+ $ Parch      : int  0 0 0 0 0 0 0 1 2 0 ...
+ $ Ticket     : Factor w/ 681 levels "110152","110413",..: 524 597 670 50 473 276 86 396 345 133 ...
+ $ Fare       : num  7.25 71.28 7.92 53.1 8.05 ...
+ $ Cabin      : Factor w/ 148 levels "","A10","A14",..: 1 83 1 57 1 1 131 1 1 1 ...
+ $ Embarked   : Factor w/ 4 levels "","C","Q","S": 4 2 4 4 4 3 4 4 4 2 ...
+ $ Title      : chr  "Mr" "Mr" "Miss" "Mr" ...
+ $ Famsize    : num  2 2 1 2 1 1 1 5 3 2 ...
+
+> aggregate(Fare~Pclass,titanic_new,median)
+  Pclass    Fare
+1      1 60.2875
+2      2 14.2500
+3      3  8.0500
+
+
+>titanic_new$Fare <- ifelse( (round(titanic_new$Fare==0) & as.numeric(titanic_new$Pclass)==1),60.2875,
+                    ifelse( (round(titanic_new$Fare==0) & as.numeric(titanic_new$Pclass)==2),14.25,
+                            ifelse( (round(titanic_new$Fare==0) & as.numeric(titanic_new$Pclass)==3),8.05,titanic_new$Fare)))
+Age Imputation with LM
+---------------------------
+>age_na <- is.na(titanic_new$Age)
+>age_train <- titanic_new[!age_na, ]
+>age_test <- titanic_new[age_na, ]
+>summary(age_train$Age)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   0.42   20.12   28.00   29.70   38.00   80.00 
+> str(age_train)
+'data.frame':	714 obs. of  12 variables:
+ $ PassengerId: int  1 2 3 4 5 7 8 9 10 11 ...
+ $ Survived   : int  0 1 1 1 0 0 0 1 1 1 ...
+ $ Pclass     : int  3 1 3 1 3 1 3 3 2 3 ...
+ $ Name       : Factor w/ 891 levels "Abbing, Mr. Anthony",..: 109 191 358 277 16 520 629 417 581 732 ...
+ $ Sex        : Factor w/ 2 levels "female","male": 2 1 1 1 2 2 2 1 1 1 ...
+ $ Age        : num  22 38 26 35 35 54 2 27 14 4 ...
+ $ SibSp      : int  1 1 0 1 0 0 3 0 1 1 ...
+ $ Parch      : int  0 0 0 0 0 0 1 2 0 1 ...
+ $ Ticket     : Factor w/ 681 levels "110152","110413",..: 524 597 670 50 473 86 396 345 133 617 ...
+ $ Fare       : num  7.25 71.28 7.92 53.1 8.05 ...
+ $ Cabin      : Factor w/ 148 levels "","A10","A14",..: 1 83 1 57 1 131 1 1 1 147 ...
+ $ Embarked   : Factor w/ 4 levels "","C","Q","S": 4 2 4 4 4 4 4 4 2 4 ...    
+> str(age_test)
+'data.frame':	177 obs. of  12 variables:
+ $ PassengerId: int  6 18 20 27 29 30 32 33 37 43 ...
+ $ Survived   : Factor w/ 2 levels "Survived","Died": 2 1 1 2 1 2 1 1 1 2 ...
+ $ Pclass     : Factor w/ 3 levels "1","2","3": 3 2 3 3 3 3 1 3 3 3 ...
+ $ Name       : Factor w/ 891 levels "Abbing, Mr. Anthony",..: 559 875 517 245 610 818 781 294 510 451 ...
+ $ Sex        : Factor w/ 2 levels "female","male": 2 2 1 2 1 2 1 1 2 2 ...
+ $ Age        : num  NA NA NA NA NA NA NA NA NA NA ...
+ $ SibSp      : int  0 0 0 0 0 0 1 0 0 0 ...
+ $ Parch      : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ Ticket     : Factor w/ 681 levels "110152","110413",..: 276 152 185 180 284 363 587 289 203 392 ...
+ $ Fare       : num  8.46 13 7.22 7.22 7.88 ...
+ $ Cabin      : Factor w/ 148 levels "","A10","A14",..: 1 1 1 1 1 1 43 1 1 1 ...
+ $ Embarked   : Factor w/ 4 levels "","C","Q","S": 3 4 2 2 3 4 2 3 2 2 ...
+> lm <- lm(Age ~ Title+Fare+Famsize+Sex,data = age_train)
+> summary(lm)
+
+Call:
+lm(formula = Age ~ Title + Fare + Famsize + Sex, data = age_train)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-26.371  -8.629  -1.802   6.506  46.465 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  14.190531   3.086410   4.598 5.06e-06 ***
+TitleMiss     9.045578   2.842996   3.182  0.00153 ** 
+TitleMr      23.124739   2.362323   9.789  < 2e-16 ***
+TitleUnknown 31.597493   3.451528   9.155  < 2e-16 ***
+Fare          0.045900   0.008817   5.206 2.53e-07 ***
+Famsize      -1.693779   0.357149  -4.743 2.55e-06 ***
+Sexmale      -3.463045   1.313780  -2.636  0.00857 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 12.02 on 707 degrees of freedom
+Multiple R-squared:  0.3207,	Adjusted R-squared:  0.3149 
+F-statistic: 55.62 on 6 and 707 DF,  p-value: < 2.2e-16
+
+> predict <- predict(lm,newdata=age_test)
+> titanic_new[titanic_new$PassengerId %in% age_test$PassengerId, "Age"] <- predict
+> summary(titanic_new)
+  PassengerId    Survived Pclass                                     Name         Sex     
+ Min.   :  1.0   0:549    1:216   Abbing, Mr. Anthony                  :  1   female:314  
+ 1st Qu.:223.5   1:342    2:184   Abbott, Mr. Rossmore Edward          :  1   male  :577  
+ Median :446.0            3:491   Abbott, Mrs. Stanton (Rosa Hunt)     :  1               
+ Mean   :446.0                    Abelson, Mr. Samuel                  :  1               
+ 3rd Qu.:668.5                    Abelson, Mrs. Samuel (Hannah Wizosky):  1               
+ Max.   :891.0                    Adahl, Mr. Mauritz Nils Martin       :  1               
+                                  (Other)                              :885               
+      Age             SibSp           Parch             Ticket         Fare                 Cabin    
+ Min.   :-4.712   Min.   :0.000   Min.   :0.0000   1601    :  7   Min.   :  4.013              :687  
+ 1st Qu.:21.000   1st Qu.:0.000   1st Qu.:0.0000   347082  :  7   1st Qu.:  7.925   B96 B98    :  4  
+ Median :30.000   Median :0.000   Median :0.0000   CA. 2343:  7   Median : 14.500   C23 C25 C27:  4  
+ Mean   :29.692   Mean   :0.523   Mean   :0.3816   3101295 :  6   Mean   : 32.675   G6         :  4  
+ 3rd Qu.:36.000   3rd Qu.:1.000   3rd Qu.:0.0000   347088  :  6   3rd Qu.: 31.275   C22 C26    :  3  
+ Max.   :80.000   Max.   :8.000   Max.   :6.0000   CA 2144 :  6   Max.   :512.329   D          :  3  
+                                                   (Other) :852                     (Other)    :186  
+ Embarked    Title              Famsize      
+  :  2    Length:891         Min.   : 1.000  
+ C:168    Class :character   1st Qu.: 1.000  
+ Q: 77    Mode  :character   Median : 1.000  
+ S:644                       Mean   : 1.905  
+                             3rd Qu.: 2.000  
+                             Max.   :11.000 
+
+> library(caTools)
+> split = sample.split(titanic_new$Survived, SplitRatio = 0.70)
+> titanic_train = subset(titanic_new, split == TRUE)
+> titanic_test = subset(titanic_new, split == FALSE)
+
+> table(titanic_new$Survived)
+
+  0   1 
+549 342 
+> table(titanic_new$Survived)/(549+342)
+
+        0         1 
+0.6161616 0.3838384 
+
+> table(titanic_train$Survived)
+
+  0   1 
+384 239 
+
+> table(titanic_train$Survived)/(384+239)
+
+        0         1 
+0.6163724 0.3836276 
+
+> table(titanic_test$Survived)
+
+  0   1 
+165 103
+
+> table(titanic_test$Survived)/(165+103)
+
+        0         1 
+0.6156716 0.3843284 
+
+######This means our sample represent the population#####
+
+> logistic <- glm(Survived~Pclass+Sex+Famsize+Title,data=titanic_train,family = binomial)
+> summary(logistic)
+
+Call:
+glm(formula = Survived ~ Pclass + Sex + Famsize + Title, family = binomial, 
+    data = titanic_train)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-2.5235  -0.6696  -0.3853   0.5147   2.5897  
+
+Coefficients:
+             Estimate Std. Error z value Pr(>|z|)    
+(Intercept)    8.1761     0.9137   8.949  < 2e-16 ***
+Pclass2       -1.1872     0.3242  -3.662  0.00025 ***
+Pclass3       -2.4388     0.2967  -8.219  < 2e-16 ***
+Sexmale       -3.7517     0.3867  -9.701  < 2e-16 ***
+Famsize       -0.3772     0.0882  -4.277 1.89e-05 ***
+TitleMiss     -4.6571     0.7345  -6.340 2.29e-10 ***
+TitleMr       -4.1716     0.6009  -6.943 3.84e-12 ***
+TitleUnknown  -4.5991     0.8974  -5.125 2.98e-07 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 829.60  on 622  degrees of freedom
+Residual deviance: 509.88  on 615  degrees of freedom
+AIC: 525.88
+
+Number of Fisher Scoring iterations: 5
+
+PREDICTION ON TEST DATASET SPLITTED BY ME
+-------------------------------------------------
+
+> predictTest1 = predict(logistic, type="response", newdata=titanic_test)
+> table(titanic_test$Survived, predictTest1>0.5)
+   
+    FALSE TRUE
+  0   148   17
+  1    28   75
+> (148+75)/(148+17+75+28)
+[1] 0.8320896-------Accuracy of my model on test dataset
+> (148+17)/(148+17+25+75)
+[1] 0.6226415---------Accuracy of baseline model
+
+PREDICTION ON TRAINING DATASET SPLITTED BY ME
+-------------------------------------------------
+> predictTest = predict(logistic, type="response", data=titanic_train)
+> table(titanic_train$Survived, predictTest>0.5)
+   
+    FALSE TRUE
+  0   347   37
+  1    71  168
+> (347+168)/(347+71+37+168)
+[1] 0.8266453--------Accuracy on training dataset
+
+PREDICTION ON TRAIN OVERALL TRAINING DATASET BY KAGGLE
+--------------------------------------------------------
+> predictall = predict(logistic, type="response", newdata=titanic_new)
+> table(titanic_new$Survived, predictall>0.5)
+   
+    FALSE TRUE
+  0   495   54
+  1    99  243
+> (495+243)/(495+54+99+243)
+[1] 0.8282828
+
+PREDICTION ON OVERALL TEST DATASET BY KAGGLE
+-----------------------------------------------
+> test$Title <-  ifelse(grepl("mr", tolower(test$Name)), 'Mr', 
++                       ifelse(grepl("miss", tolower(test$Name)), 'Miss', 
++                              ifelse(grepl("mrs", tolower(test$Name)), 'Mrs', 
++                                     ifelse(grepl("master", tolower(test$Name)), 'Master','Unknown'))))
+> str(test)
+'data.frame':	418 obs. of  12 variables:
+ $ PassengerId: int  892 893 894 895 896 897 898 899 900 901 ...
+ $ Pclass     : int  3 3 2 3 3 3 3 2 3 3 ...
+ $ Name       : Factor w/ 418 levels "Abbott, Master. Eugene Joseph",..: 210 409 273 414 182 370 85 58 5 104 ...
+ $ Sex        : Factor w/ 2 levels "female","male": 2 1 2 2 1 2 1 2 1 2 ...
+ $ Age        : num  34.5 47 62 27 22 14 30 26 18 21 ...
+ $ SibSp      : int  0 1 0 0 1 0 0 1 0 2 ...
+ $ Parch      : int  0 0 0 0 1 0 0 1 0 0 ...
+ $ Ticket     : Factor w/ 363 levels "110469","110489",..: 153 222 74 148 139 262 159 85 101 270 ...
+ $ Fare       : num  7.83 7 9.69 8.66 12.29 ...
+ $ Cabin      : Factor w/ 77 levels "","A11","A18",..: 1 1 1 1 1 1 1 1 1 1 ...
+ $ Embarked   : Factor w/ 3 levels "C","Q","S": 2 3 2 3 3 3 2 3 1 3 ...
+ $ Title      : chr  "Mr" "Mr" "Mr" "Mr" ...
+> test$Famsize <- test$SibSp+test$Parch+1
+> test$Pclass <- as.factor(test$Pclass)
+> test$Title <- as.factor(test$Title)
+> Predict <- predict(logistic, type="response", newdata=test)
+> test$Survived <- ifelse(Predict >= 0.31, 1, 0)
+> LOGISTIC_Solution <- data.frame(PassengerId = test$PassengerId, Survived = test$Survived)
+> write.csv(LOGISTIC_Solution, file = "LOGISTIC_Solution.csv", row.names = FALSE)
+
+
+DECISION TREES MODEL=========================================================================
+
+
+> my_tree_two <- rpart(Survived~Pclass+Sex+Famsize+Title,data=titanic_train, method="class")
+
+
+PREDICTION ON TRAINING DATASET SPLITTED BY ME
+-------------------------------------------------
+> my_prediction <- predict(my_tree_two, titanic_train, type = "class")
+> table(titanic_train$Survived,my_prediction)
+   my_prediction
+      0   1
+  0 344  40
+  1  65 174
+> (344+174)/(344+40+65+174)
+[1] 0.8314607
+
+PREDICTION ON TRAINING DATASET SPLITTED BY ME
+-------------------------------------------------
+> my_prediction <- predict(my_tree_two, titanic_test, type = "class")
+> table(titanic_test$Survived,my_prediction)
+   my_prediction
+      0   1
+  0 148  17
+  1  25  78
+> (148+78)/(148+17+78+25)
+[1] 0.8432836
+
+PREDICTION ON TRAINING DATASET(KAGGLE)
+-------------------------------------------------
+> my_prediction <- predict(my_tree_two, titanic_new, type = "class")
+> table(titanic_new$Survived,my_prediction)
+   my_prediction
+      0   1
+  0 492  57
+  1  90 252
+> (492+252)/(492+57+90+252)
+[1] 0.8350168
+
+PREDICTION ON TEST DATASET(KAGGLE)
+----------------------------------------
+> test <-read.csv("test.csv")
+> str(test)
+'data.frame':	418 obs. of  11 variables:
+ $ PassengerId: int  892 893 894 895 896 897 898 899 900 901 ...
+ $ Pclass     : int  3 3 2 3 3 3 3 2 3 3 ...
+ $ Name       : Factor w/ 418 levels "Abbott, Master. Eugene Joseph",..: 210 409 273 414 182 370 85 58 5 104 ...
+ $ Sex        : Factor w/ 2 levels "female","male": 2 1 2 2 1 2 1 2 1 2 ...
+ $ Age        : num  34.5 47 62 27 22 14 30 26 18 21 ...
+ $ SibSp      : int  0 1 0 0 1 0 0 1 0 2 ...
+ $ Parch      : int  0 0 0 0 1 0 0 1 0 0 ...
+ $ Ticket     : Factor w/ 363 levels "110469","110489",..: 153 222 74 148 139 262 159 85 101 270 ...
+ $ Fare       : num  7.83 7 9.69 8.66 12.29 ...
+ $ Cabin      : Factor w/ 77 levels "","A11","A18",..: 1 1 1 1 1 1 1 1 1 1 ...
+ $ Embarked   : Factor w/ 3 levels "C","Q","S": 2 3 2 3 3 3 2 3 1 3 ...
+> test$Famsize <- test$SibSp+test$Parch+1
+> test$Pclass <- as.factor(test$Pclass)
+> test$Title <-  ifelse(grepl("mr", tolower(test$Name)), 'Mr', 
++                       ifelse(grepl("miss", tolower(test$Name)), 'Miss', 
++                              ifelse(grepl("mrs", tolower(test$Name)), 'Mrs', 
++                                     ifelse(grepl("master", tolower(test$Name)), 'Master','Unknown'))))
+> test$Title <- as.factor(test$Title)
+> my_prediction <- predict(my_tree_two, test, type = "class")
+> Decisiontree_Solution <- data.frame(PassengerId = test$PassengerId, Survived = my_prediction)
+> write.csv(Decisiontree_Solution, file = "Decisiontree_Solution.csv", row.names = FALSE)
+
+
+
+RANDOM FOREST=======================================================================================================
+
+
+> library(randomForest)
+> my_forest <- randomForest(Survived~Pclass+Sex+Famsize+Title,data=titanic_train, importance=TRUE,ntree=1000)
+> varImpPlot(my_forest)
+> my_prediction <- predict(my_forest, data= titanic_train)
+> table(titanic_train$Survived,my_prediction)
+   my_prediction
+      0   1
+  0 344  40
+  1  67 172
+> (344+172)/(344+172+40+67)
+[1] 0.8282504
+> my_prediction <- predict(my_forest, newdata= titanic_test)
+> table(titanic_test$Survived,my_prediction)
+   my_prediction
+      0   1
+  0 148  17
+  1  25  78
+> (148+78)/((148+17+78+25))
+[1] 0.8432836
+> my_prediction <- predict(my_forest, newdata= titanic_new)
+> table(titanic_new$Survived,my_prediction)
+   my_prediction
+      0   1
+  0 492  57
+  1  90 252
+> (492+252)/(492+57+90+252)
+[1] 0.8350168
+> my_prediction <- predict(my_forest, newdata= test)
+> RandomForest_Solution <- data.frame(PassengerId = test$PassengerId, Survived = my_prediction)
+> write.csv(RandomForest_Solution, file = "RandomForest_Solution.csv", row.names = FALSE)
+> 
