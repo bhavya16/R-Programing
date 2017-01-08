@@ -1,0 +1,529 @@
+CART STEPS
+===============
+
+
+
+> stevens = read.csv("stevens.csv")
+> str(stevens)
+'data.frame':   566 obs. of  9 variables:
+ $ Docket    : Factor w/ 566 levels "00-1011","00-1045",..: 63 69 70 145 97 181 242 289 334 436 ...
+ $ Term      : int  1994 1994 1994 1994 1995 1995 1996 1997 1997 1999 ...
+ $ Circuit   : Factor w/ 13 levels "10th","11th",..: 4 11 7 3 9 11 13 11 12 2 ...
+ $ Issue     : Factor w/ 11 levels "Attorneys","CivilRights",..: 5 5 5 5 9 5 5 5 5 3 ...
+ $ Petitioner: Factor w/ 12 levels "AMERICAN.INDIAN",..: 2 2 2 2 2 2 2 2 2 2 ...
+ $ Respondent: Factor w/ 12 levels "AMERICAN.INDIAN",..: 2 2 2 2 2 2 2 2 2 2 ...
+ $ LowerCourt: Factor w/ 2 levels "conser","liberal": 2 2 2 1 1 1 1 1 1 1 ...
+ $ Unconst   : int  0 0 0 0 0 1 0 1 0 0 ...
+ $ Reverse   : int  1 1 1 1 1 0 1 1 1 1 ...
+> library(caTools)
+> set.seed(3000)
+> spl = sample.split(stevens$Reverse, SplitRatio = 0.7)
+> Train = subset(stevens, spl == TRUE)
+> Test = subset(stevens, spl == FALSE)
+> install.packages("rpart")
+Installing package into ‘C:/Users/Bhavya/Documents/R/win-library/3.1’
+(as ‘lib’ is unspecified)
+--- Please select a CRAN mirror for use in this session ---
+trying URL 'http://mirror.las.iastate.edu/CRAN/bin/windows/contrib/3.1/rpart_4.1-9.zip'
+Content type 'application/zip' length 918579 bytes (897 KB)
+opened URL
+downloaded 897 KB
+
+package ‘rpart’ successfully unpacked and MD5 sums checked
+
+The downloaded binary packages are in
+        C:\Users\Bhavya\AppData\Local\Temp\Rtmp4OAXhW\downloaded_packages
+> library(rpart)
+> install.packages("rpart.plot")
+Installing package into ‘C:/Users/Bhavya/Documents/R/win-library/3.1’
+(as ‘lib’ is unspecified)
+trying URL 'http://mirror.las.iastate.edu/CRAN/bin/windows/contrib/3.1/rpart.plot_1.5.2.zip'
+Content type 'application/zip' length 518265 bytes (506 KB)
+opened URL
+downloaded 506 KB
+
+package ‘rpart.plot’ successfully unpacked and MD5 sums checked
+
+The downloaded binary packages are in
+        C:\Users\Bhavya\AppData\Local\Temp\Rtmp4OAXhW\downloaded_packages
+> library(rpart.plot)
+
+
+> StevensTree = rpart(Reverse ~ Circuit +Issue + Petitioner + Respondent + LowerCourt + Unconst, data = Train, method = "class", minbucket = 25)
+> prp(StevensTree)
+> PredictCart = predict(StevensTree, newdata= Test, type = "class")
+> table(Test$Reverse, PredictCart)
+   PredictCart
+     0  1
+  0 41 36
+  1 22 71
+> (41+71)/(41+71+36+22)
+[1] 0.6588235
+> library(ROCR)
+> PredictROCR = predict(StevensTree, newdata= Test)
+> PredictROCR
+            0         1
+1   0.3035714 0.6964286
+3   0.3035714 0.6964286
+4   0.4000000 0.6000000
+6   0.4000000 0.6000000
+8   0.4000000 0.6000000
+21  0.3035714 0.6964286
+32  0.5517241 0.4482759
+36  0.5517241 0.4482759
+40  0.3035714 0.6964286
+42  0.5517241 0.4482759
+46  0.5517241 0.4482759
+47  0.4000000 0.6000000
+53  0.5517241 0.4482759
+55  0.3035714 0.6964286
+59  0.1842105 0.8157895
+60  0.4000000 0.6000000
+66  0.4000000 0.6000000
+67  0.4000000 0.6000000
+68  0.1842105 0.8157895
+72  0.3035714 0.6964286
+79  0.3035714 0.6964286
+80  0.5517241 0.4482759
+87  0.7600000 0.2400000
+88  0.1842105 0.8157895
+92  0.7910448 0.2089552
+95  0.7910448 0.2089552
+102 0.7910448 0.2089552
+106 0.7910448 0.2089552
+110 0.7910448 0.2089552
+112 0.7910448 0.2089552
+114 0.7910448 0.2089552
+125 0.7910448 0.2089552
+130 0.7910448 0.2089552
+134 0.7910448 0.2089552
+138 0.7910448 0.2089552
+145 0.7910448 0.2089552
+146 0.7910448 0.2089552
+148 0.3035714 0.6964286
+149 0.3035714 0.6964286
+152 0.3035714 0.6964286
+154 0.5517241 0.4482759
+161 0.7878788 0.2121212
+164 0.4000000 0.6000000
+167 0.7878788 0.2121212
+169 0.3035714 0.6964286
+171 0.7600000 0.2400000
+175 0.5517241 0.4482759
+176 0.0754717 0.9245283
+177 0.0754717 0.9245283
+178 0.0754717 0.9245283
+180 0.0754717 0.9245283
+187 0.0754717 0.9245283
+188 0.7878788 0.2121212
+190 0.0754717 0.9245283
+192 0.0754717 0.9245283
+196 0.0754717 0.9245283
+197 0.3035714 0.6964286
+208 0.3035714 0.6964286
+210 0.0754717 0.9245283
+216 0.7910448 0.2089552
+218 0.7910448 0.2089552
+220 0.0754717 0.9245283
+224 0.4000000 0.6000000
+226 0.7600000 0.2400000
+227 0.4000000 0.6000000
+228 0.7878788 0.2121212
+235 0.3035714 0.6964286
+239 0.7878788 0.2121212
+242 0.7600000 0.2400000
+244 0.7600000 0.2400000
+247 0.4000000 0.6000000
+255 0.3035714 0.6964286
+260 0.5517241 0.4482759
+261 0.7600000 0.2400000
+264 0.3035714 0.6964286
+265 0.3035714 0.6964286
+268 0.3035714 0.6964286
+272 0.5517241 0.4482759
+273 0.3035714 0.6964286
+274 0.5517241 0.4482759
+275 0.3035714 0.6964286
+282 0.4000000 0.6000000
+286 0.7878788 0.2121212
+291 0.4000000 0.6000000
+294 0.1842105 0.8157895
+305 0.4000000 0.6000000
+306 0.3035714 0.6964286
+308 0.7878788 0.2121212
+311 0.7878788 0.2121212
+313 0.7878788 0.2121212
+314 0.7878788 0.2121212
+315 0.7878788 0.2121212
+317 0.7878788 0.2121212
+320 0.7878788 0.2121212
+321 0.7878788 0.2121212
+323 0.4000000 0.6000000
+331 0.3035714 0.6964286
+335 0.3035714 0.6964286
+338 0.7600000 0.2400000
+341 0.5517241 0.4482759
+345 0.5517241 0.4482759
+346 0.3035714 0.6964286
+350 0.3035714 0.6964286
+352 0.3035714 0.6964286
+353 0.1842105 0.8157895
+355 0.3035714 0.6964286
+356 0.1842105 0.8157895
+358 0.3035714 0.6964286
+359 0.3035714 0.6964286
+360 0.4000000 0.6000000
+361 0.4000000 0.6000000
+362 0.5517241 0.4482759
+364 0.3035714 0.6964286
+368 0.3035714 0.6964286
+381 0.4000000 0.6000000
+382 0.1842105 0.8157895
+384 0.3035714 0.6964286
+387 0.1842105 0.8157895
+389 0.3035714 0.6964286
+390 0.4000000 0.6000000
+394 0.3035714 0.6964286
+400 0.7878788 0.2121212
+402 0.4000000 0.6000000
+405 0.7878788 0.2121212
+408 0.3035714 0.6964286
+410 0.3035714 0.6964286
+416 0.4000000 0.6000000
+422 0.7600000 0.2400000
+432 0.0754717 0.9245283
+434 0.7910448 0.2089552
+436 0.0754717 0.9245283
+441 0.7910448 0.2089552
+444 0.0754717 0.9245283
+448 0.0754717 0.9245283
+450 0.0754717 0.9245283
+451 0.0754717 0.9245283
+452 0.7910448 0.2089552
+454 0.0754717 0.9245283
+456 0.0754717 0.9245283
+459 0.0754717 0.9245283
+462 0.0754717 0.9245283
+464 0.0754717 0.9245283
+467 0.0754717 0.9245283
+468 0.0754717 0.9245283
+470 0.0754717 0.9245283
+473 0.0754717 0.9245283
+476 0.0754717 0.9245283
+478 0.0754717 0.9245283
+480 0.0754717 0.9245283
+482 0.0754717 0.9245283
+483 0.0754717 0.9245283
+484 0.0754717 0.9245283
+494 0.7910448 0.2089552
+498 0.1842105 0.8157895
+504 0.4000000 0.6000000
+509 0.4000000 0.6000000
+521 0.7600000 0.2400000
+527 0.4000000 0.6000000
+531 0.4000000 0.6000000
+535 0.4000000 0.6000000
+538 0.7600000 0.2400000
+539 0.1842105 0.8157895
+540 0.4000000 0.6000000
+543 0.7600000 0.2400000
+545 0.4000000 0.6000000
+546 0.7910448 0.2089552
+551 0.7910448 0.2089552
+552 0.7910448 0.2089552
+556 0.4000000 0.6000000
+558 0.1842105 0.8157895
+
+> pred = prediction(PredictROCR[,2],Test$Reverse)
+> pref = performance(pred,"tpr","fpr")
+> plot(pref)
+> as.numeric(performance(pred, "auc")@y.values)
+[1] 0.6927105
+
+
+===============================================================================================================
+> install.packages("randomForest")
+Installing package into ‘C:/Users/Bhavya/Documents/R/win-library/3.1’
+(as ‘lib’ is unspecified)
+--- Please select a CRAN mirror for use in this session ---
+trying URL 'http://mirror.las.iastate.edu/CRAN/bin/windows/contrib/3.1/randomForest_4.6-10.zip'
+Content type 'application/zip' length 176311 bytes (172 KB)
+opened URL
+downloaded 172 KB
+
+package ‘randomForest’ successfully unpacked and MD5 sums checked
+
+The downloaded binary packages are in
+        C:\Users\Bhavya\AppData\Local\Temp\RtmpykYR4e\downloaded_packages
+> library(randomForest)
+randomForest 4.6-10
+Type rfNews() to see new features/changes/bug fixes.
+> StevensForest = randomForest(Reverse ~ Circuit + Issue +Petitioner + LowerCourt + Unconst, data = Train,nodesize=25, ntree=200)
+Error in eval(expr, envir, enclos) : object 'Train' not found
+> stevens = read.csv("stevens.csv")
+> library(csTools)
+Error in library(csTools) : there is no package called ‘csTools’
+> library(caTools)
+> set.seed(3000)
+> spl = sample.split(stevens$Reverse, SplitRatio = 0.7)
+> Train = subset(stevens, spl == TRUE)
+> Test = subset(stevens, spl == FALSE)
+> StevensForest = randomForest(Reverse ~ Circuit + Issue +Petitioner + LowerCourt + Unconst, data = Train,nodesize=25, ntree=200)
+Warning message:
+In randomForest.default(m, y, ...) :
+  The response has five or fewer unique values.  Are you sure you want to do regression?
+> TrainReverse = as.factor(TrainReverse)
+Error in is.factor(x) : object 'TrainReverse' not found
+> Train$Reverse = as.factor(Train$Reverse)
+> Test$Reverse = as.factor(Test$Reverse)
+> StevensForest = randomForest(Reverse ~ Circuit + Issue +Petitioner + LowerCourt + Unconst, data = Train,nodesize=25, ntree=200)
+> PredictForest = predict(StevensForest, newdata= Test)
+> table(Test$Reverse, PredictForest)
+   PredictForest
+     0  1
+  0 42 35
+  1 22 71
+> (42+71)/(42+71+22+35)
+[1] 0.6647059
+> set.seed(100)
+> StevensForest = randomForest(Reverse ~ Circuit + Issue +Petitioner + LowerCourt + Unconst, data = Train,nodesize=25, ntree=200)
+> PredictForest = predict(StevensForest, newdata= Test)
+> table(Test$Reverse, PredictForest)
+   PredictForest
+     0  1
+  0 39 38
+  1 22 71
+> (39+71)/(39+71+22+38)
+[1] 0.6470588
+> set.seed(200)
+> StevensForest = randomForest(Reverse ~ Circuit + Issue +Petitioner + LowerCourt + Unconst, data = Train,nodesize=25, ntree=200)
+> PredictForest = predict(StevensForest, newdata= Test)
+> table(Test$Reverse, PredictForest)
+   PredictForest
+     0  1
+  0 40 37
+  1 20 73
+> (40+73)/(40+73+20+37)
+[1] 0.6647059
+
+
+=================================================================================================================
+USING CROSS VALIDATION
+------------------------
+
+> install.packages("caret")
+Installing package into ‘C:/Users/Bhavya/Documents/R/win-library/3.1’
+(as ‘lib’ is unspecified)
+also installing the dependencies ‘SparseM’, ‘minqa’, ‘nloptr’, ‘RcppEigen’, ‘profileModel’, ‘pbkrtest’, ‘quantreg’, ‘iterators’, ‘lme4’, ‘brglm’, ‘car’, ‘foreach’, ‘BradleyTerry2’
+
+trying URL 'http://mirror.las.iastate.edu/CRAN/bin/windows/contrib/3.1/SparseM_1.6.zip'
+Content type 'application/zip' length 803107 bytes (784 KB)
+opened URL
+downloaded 784 KB
+
+trying URL 'http://mirror.las.iastate.edu/CRAN/bin/windows/contrib/3.1/minqa_1.2.4.zip'
+Content type 'application/zip' length 559339 bytes (546 KB)
+opened URL
+downloaded 546 KB
+
+trying URL 'http://mirror.las.iastate.edu/CRAN/bin/windows/contrib/3.1/nloptr_1.0.4.zip'
+Content type 'application/zip' length 1103413 bytes (1.1 MB)
+opened URL
+downloaded 1.1 MB
+
+trying URL 'http://mirror.las.iastate.edu/CRAN/bin/windows/contrib/3.1/RcppEigen_0.3.2.4.0.zip'
+Content type 'application/zip' length 2130341 bytes (2.0 MB)
+opened URL
+downloaded 2.0 MB
+
+trying URL 'http://mirror.las.iastate.edu/CRAN/bin/windows/contrib/3.1/profileModel_0.5-9.zip'
+Content type 'application/zip' length 68048 bytes (66 KB)
+opened URL
+downloaded 66 KB
+
+trying URL 'http://mirror.las.iastate.edu/CRAN/bin/windows/contrib/3.1/pbkrtest_0.4-2.zip'
+Content type 'application/zip' length 205251 bytes (200 KB)
+opened URL
+downloaded 200 KB
+
+trying URL 'http://mirror.las.iastate.edu/CRAN/bin/windows/contrib/3.1/quantreg_5.11.zip'
+Content type 'application/zip' length 2045211 bytes (2.0 MB)
+opened URL
+downloaded 2.0 MB
+
+trying URL 'http://mirror.las.iastate.edu/CRAN/bin/windows/contrib/3.1/iterators_1.0.7.zip'
+Content type 'application/zip' length 315647 bytes (308 KB)
+opened URL
+downloaded 308 KB
+
+trying URL 'http://mirror.las.iastate.edu/CRAN/bin/windows/contrib/3.1/lme4_1.1-7.zip'
+Content type 'application/zip' length 4113110 bytes (3.9 MB)
+opened URL
+downloaded 3.9 MB
+
+trying URL 'http://mirror.las.iastate.edu/CRAN/bin/windows/contrib/3.1/brglm_0.5-9.zip'
+Content type 'application/zip' length 101499 bytes (99 KB)
+opened URL
+downloaded 99 KB
+
+trying URL 'http://mirror.las.iastate.edu/CRAN/bin/windows/contrib/3.1/car_2.0-25.zip'
+Content type 'application/zip' length 1386606 bytes (1.3 MB)
+opened URL
+downloaded 1.3 MB
+
+trying URL 'http://mirror.las.iastate.edu/CRAN/bin/windows/contrib/3.1/foreach_1.4.2.zip'
+Content type 'application/zip' length 388697 bytes (379 KB)
+opened URL
+downloaded 379 KB
+
+trying URL 'http://mirror.las.iastate.edu/CRAN/bin/windows/contrib/3.1/BradleyTerry2_1.0-6.zip'
+Content type 'application/zip' length 498350 bytes (486 KB)
+opened URL
+downloaded 486 KB
+
+trying URL 'http://mirror.las.iastate.edu/CRAN/bin/windows/contrib/3.1/caret_6.0-47.zip'
+Content type 'application/zip' length 4023382 bytes (3.8 MB)
+opened URL
+downloaded 3.8 MB
+
+package ‘SparseM’ successfully unpacked and MD5 sums checked
+package ‘minqa’ successfully unpacked and MD5 sums checked
+package ‘nloptr’ successfully unpacked and MD5 sums checked
+package ‘RcppEigen’ successfully unpacked and MD5 sums checked
+package ‘profileModel’ successfully unpacked and MD5 sums checked
+package ‘pbkrtest’ successfully unpacked and MD5 sums checked
+package ‘quantreg’ successfully unpacked and MD5 sums checked
+package ‘iterators’ successfully unpacked and MD5 sums checked
+package ‘lme4’ successfully unpacked and MD5 sums checked
+package ‘brglm’ successfully unpacked and MD5 sums checked
+package ‘car’ successfully unpacked and MD5 sums checked
+package ‘foreach’ successfully unpacked and MD5 sums checked
+package ‘BradleyTerry2’ successfully unpacked and MD5 sums checked
+package ‘caret’ successfully unpacked and MD5 sums checked
+
+The downloaded binary packages are in
+        C:\Users\Bhavya\AppData\Local\Temp\RtmpykYR4e\downloaded_packages
+> install.packages("e1071")
+Installing package into ‘C:/Users/Bhavya/Documents/R/win-library/3.1’
+(as ‘lib’ is unspecified)
+trying URL 'http://mirror.las.iastate.edu/CRAN/bin/windows/contrib/3.1/e1071_1.6-4.zip'
+Content type 'application/zip' length 541629 bytes (528 KB)
+opened URL
+downloaded 528 KB
+
+package ‘e1071’ successfully unpacked and MD5 sums checked
+
+The downloaded binary packages are in
+        C:\Users\Bhavya\AppData\Local\Temp\RtmpykYR4e\downloaded_packages
+> install.packages("class")
+Installing package into ‘C:/Users/Bhavya/Documents/R/win-library/3.1’
+(as ‘lib’ is unspecified)
+trying URL 'http://mirror.las.iastate.edu/CRAN/bin/windows/contrib/3.1/class_7.3-12.zip'
+Content type 'application/zip' length 100076 bytes (97 KB)
+opened URL
+downloaded 97 KB
+
+package ‘class’ successfully unpacked and MD5 sums checked
+
+The downloaded binary packages are in
+        C:\Users\Bhavya\AppData\Local\Temp\RtmpykYR4e\downloaded_packages
+> install.packages("ggplot2")
+Installing package into ‘C:/Users/Bhavya/Documents/R/win-library/3.1’
+(as ‘lib’ is unspecified)
+trying URL 'http://mirror.las.iastate.edu/CRAN/bin/windows/contrib/3.1/ggplot2_1.0.1.zip'
+Content type 'application/zip' length 2674655 bytes (2.6 MB)
+opened URL
+downloaded 2.6 MB
+
+package ‘ggplot2’ successfully unpacked and MD5 sums checked
+
+The downloaded binary packages are in
+        C:\Users\Bhavya\AppData\Local\Temp\RtmpykYR4e\downloaded_packages
+> library(caret)
+Loading required package: lattice
+Loading required package: ggplot2
+> library(e1071)
+> numFolds = trainControl(method="cv",number =10)
+> cpGrid = expand.grid(.cp = seq(0.01,0.5,0.01))
+> train(Reverse ~ Circuit + Issue + Petitioner +Respondent + LowerCourt + Unconst,data = Train, method = "rpart", trControl=numFolds,tuneGrid = cpGrid)
+Loading required package: rpart
+CART 
+
+396 samples
+  8 predictor
+  2 classes: '0', '1' 
+
+No pre-processing
+Resampling: Cross-Validated (10 fold) 
+
+Summary of sample sizes: 356, 357, 356, 356, 357, 357, ... 
+
+Resampling results across tuning parameters:
+
+  cp    Accuracy   Kappa       Accuracy SD  Kappa SD  
+  0.01  0.6315385  0.24480852  0.055149569  0.11295416
+  0.02  0.6263462  0.23579187  0.061729175  0.12140385
+  0.03  0.6238462  0.23270399  0.062293416  0.12216140
+  0.04  0.6390385  0.27137915  0.065114835  0.13061636
+  0.05  0.6440385  0.28399157  0.067909768  0.13491197
+  0.06  0.6440385  0.28399157  0.067909768  0.13491197
+  0.07  0.6440385  0.28399157  0.067909768  0.13491197
+  0.08  0.6440385  0.28399157  0.067909768  0.13491197
+  0.09  0.6440385  0.28399157  0.067909768  0.13491197
+  0.10  0.6440385  0.28399157  0.067909768  0.13491197
+  0.11  0.6440385  0.28399157  0.067909768  0.13491197
+  0.12  0.6440385  0.28399157  0.067909768  0.13491197
+  0.13  0.6440385  0.28399157  0.067909768  0.13491197
+  0.14  0.6440385  0.28399157  0.067909768  0.13491197
+  0.15  0.6440385  0.28399157  0.067909768  0.13491197
+  0.16  0.6440385  0.28399157  0.067909768  0.13491197
+  0.17  0.6440385  0.28399157  0.067909768  0.13491197
+  0.18  0.6440385  0.28399157  0.067909768  0.13491197
+  0.19  0.6440385  0.28399157  0.067909768  0.13491197
+  0.20  0.6240385  0.23349652  0.062468671  0.13749425
+  0.21  0.5654487  0.08692992  0.035491254  0.10622158
+  0.22  0.5554487  0.05623685  0.019511835  0.07548587
+  0.23  0.5504487  0.03704494  0.011648925  0.05995613
+  0.24  0.5453846  0.01089109  0.005958436  0.03444065
+  0.25  0.5453846  0.00000000  0.005958436  0.00000000
+  0.26  0.5453846  0.00000000  0.005958436  0.00000000
+  0.27  0.5453846  0.00000000  0.005958436  0.00000000
+  0.28  0.5453846  0.00000000  0.005958436  0.00000000
+  0.29  0.5453846  0.00000000  0.005958436  0.00000000
+  0.30  0.5453846  0.00000000  0.005958436  0.00000000
+  0.31  0.5453846  0.00000000  0.005958436  0.00000000
+  0.32  0.5453846  0.00000000  0.005958436  0.00000000
+  0.33  0.5453846  0.00000000  0.005958436  0.00000000
+  0.34  0.5453846  0.00000000  0.005958436  0.00000000
+  0.35  0.5453846  0.00000000  0.005958436  0.00000000
+  0.36  0.5453846  0.00000000  0.005958436  0.00000000
+  0.37  0.5453846  0.00000000  0.005958436  0.00000000
+  0.38  0.5453846  0.00000000  0.005958436  0.00000000
+  0.39  0.5453846  0.00000000  0.005958436  0.00000000
+  0.40  0.5453846  0.00000000  0.005958436  0.00000000
+  0.41  0.5453846  0.00000000  0.005958436  0.00000000
+  0.42  0.5453846  0.00000000  0.005958436  0.00000000
+  0.43  0.5453846  0.00000000  0.005958436  0.00000000
+  0.44  0.5453846  0.00000000  0.005958436  0.00000000
+  0.45  0.5453846  0.00000000  0.005958436  0.00000000
+  0.46  0.5453846  0.00000000  0.005958436  0.00000000
+  0.47  0.5453846  0.00000000  0.005958436  0.00000000
+  0.48  0.5453846  0.00000000  0.005958436  0.00000000
+  0.49  0.5453846  0.00000000  0.005958436  0.00000000
+  0.50  0.5453846  0.00000000  0.005958436  0.00000000
+
+Accuracy was used to select the optimal model using  the largest value.
+The final value used for the model was cp = 0.19. 
+> StevensTreeCV = rpart(Reverse ~ Circuit + Issue + Petitioner +Respondent + LowerCourt + Unconst,data=Train, method="class",cp=0.19)
+> PredictCV = predict(StevensTreeCV, newdata=Tst, type = "class")
+Error in predict.rpart(StevensTreeCV, newdata = Tst, type = "class") : 
+  object 'Tst' not found
+> PredictCV = predict(StevensTreeCV, newdata=Test, type = "class")
+> table(Test$Reverse, PredictCV)
+   PredictCV
+     0  1
+  0 59 18
+  1 29 64
+> (59+64)/(59+64+29+18)
+[1] 0.7235294
+
